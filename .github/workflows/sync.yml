@@ -7,6 +7,11 @@ on:
     branches: [master] # Trigger on push to master branch
   workflow_dispatch: # Allows manual triggering from GitHub UI
 
+# Prevent overlapping runs from clobbering the cached data.db
+concurrency:
+  group: scrobble-sync
+  cancel-in-progress: false
+
 jobs:
   scrobble:
     runs-on: ubuntu-latest
@@ -14,26 +19,20 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
-
-      - name: Cache dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
+          cache: pip # Replaces the manual pip cache step
+          cache-dependency-path: requirements.txt
 
       - name: Install dependencies
         run: pip install -r requirements.txt
 
       - name: Cache scrobble database
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: data.db
           key: ${{ runner.os }}-scrobble-db-${{ github.run_id }}-${{ github.run_attempt }}
@@ -57,7 +56,12 @@ jobs:
     environment: production
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
 
       - name: Send Discord failure notification
         env:
