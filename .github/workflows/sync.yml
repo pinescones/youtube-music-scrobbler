@@ -40,6 +40,22 @@ jobs:
             ${{ runner.os }}-scrobble-db-${{ github.run_id }}-
             ${{ runner.os }}-scrobble-db-
 
+      - name: Cache scrobble database
+        uses: actions/cache@v5
+        with:
+          path: data.db
+          key: ${{ runner.os }}-scrobble-db-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            ${{ runner.os }}-scrobble-db-${{ github.run_id }}-
+            ${{ runner.os }}-scrobble-db-
+
+      - name: Debug auth key        # <-- add here
+        env:
+          YTMUSIC_AUTH_KEY: ${{ secrets.YTMUSIC_AUTH_KEY }}
+        run: |
+          echo "length: ${#YTMUSIC_AUTH_KEY}"
+          ls -l browser.json.enc
+
       - name: Run YouTube Music Scrobbler
         env:
           LAST_FM_API: ${{ secrets.LAST_FM_API }}
